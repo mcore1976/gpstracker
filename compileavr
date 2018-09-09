@@ -1,0 +1,8 @@
+rm *.elf
+rm *.o
+rm *.hex
+avr-gcc -mmcu=attiny2313 -std=gnu99 -Wall -Os -o main.elf main.c -w
+avr-objcopy -j .text -j .data -O ihex main.elf main.hex
+avr-size --mcu=attiny2313 --format=avr main.elf
+sudo avrdude -c usbasp -p t2313 -U lfuse:w:0xe4:m  -U flash:w:"main.hex":a
+
