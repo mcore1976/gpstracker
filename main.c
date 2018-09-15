@@ -30,7 +30,6 @@ const char ISREG2[] PROGMEM = { "+CREG: 0,2" };
 const char ISREG3[] PROGMEM = { "+CREG: 0,3" };
 const char ISSABR[] PROGMEM = { "+SABR" };
 const char SHOW_REGISTRATION[] PROGMEM = {"AT+CREG?\n\r"};
-const char SHOW_OPERATORS[] PROGMEM = {"AT+COPS=?\n\r"};
 const char PIN_IS_READY[] PROGMEM = {"+CPIN: READY"};
 const char PIN_MUST_BE_ENTERED[] PROGMEM = {"+CPIN: SIM PIN"};
 
@@ -44,6 +43,11 @@ const char SMS2[] PROGMEM = {"AT+CMGS=\"+48"};   // no ONLY FOR ORANGE PL becaus
 
 const char CRLF[] PROGMEM = {"\"\n\r"};
 const char CLIP[] PROGMEM = {"AT+CLIP=1\r\n"};
+
+// Flightmode ON OFF
+const char FLIGHTON[] PROGMEM = { "AT+CFUN=0\r\n" };
+const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
+
 
 // for sending SMS predefined text 
 const char GOOGLELOC1[] PROGMEM = {"\r\n http://maps.google.com/maps?q="};
@@ -105,6 +109,8 @@ volatile static uint8_t latitude[10] = "1234567890";
 volatile static uint8_t latitude_pos = 0;
 volatile static uint8_t longtitude[10] = "1234567890";
 volatile static uint8_t longtitude_pos = 0;
+volatile static uint8_t buf[20];  // buffer to copy string from PROGMEM
+
 
 
 /*
@@ -156,10 +162,10 @@ uint8_t is_in_rx_buffer(char *str, char *sub) {
     {
       if(str[i] == sub[j])
      {
-       for(k=i, j=0; str[k] && sub[j]; j++, k++)
-            if(str[k]!=sub[j])   break;
-       if(!sub[j]) return 1;  // substring has been found
-        
+       for(k=i, j=0; str[k] && sub[j]; j++, k++)  // if NOT NULL on each of strings
+            if(str[k]!=sub[j])   break; // if different - start comparision with next char
+       // if(!sub[j]) return 1; 
+        if(j == strlen(sub)) return 1;  // full substring has been found        
       }
      }
      // substring not found
@@ -313,9 +319,9 @@ uint8_t waitforresponse()
                do {  
                 if (readline()>0)
                    {
-                    memcpy_P(&buf2, &ISOK, sizeof(ISOK));                     
+                    memcpy_P(buf2, ISOK, sizeof(ISOK));                     
                    if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
-                    memcpy_P(&buf2, &ISERROR, sizeof(ISERROR));                     
+                    memcpy_P(buf2, ISERROR, sizeof(ISERROR));                     
                    if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 0; 
                    };
                } while (initialized2 == 0);
@@ -421,6 +427,115 @@ asm volatile (
 );
 }
 
+// SIM800L initialization procedures
+
+
+// wait for first AT in case SIM800L is starting up
+uint8_t checkat()
+{
+  uint8_t initialized2;
+
+// wait for first OK while sending AT - autosensing speed on SIM800L, but we are working 9600 bps
+// SIM 800L can be set by AT+IPR=9600  to fix this speed
+// which I do recommend
+
+                 initialized2 = 0;
+              do { 
+		delay_2s();
+               uart_puts_P(AT);
+                if (readline()>0)
+                   {
+                    memcpy_P(buf, ISOK, sizeof(ISOK));                     
+                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1; 
+                   // just debug
+               // uart_puts_P(response);                   
+                   };
+               } while (initialized2 == 0);
+
+        // send ECHO OFF
+		delay_2s();
+                 uart_puts_P(ECHO_OFF);
+
+             return initialized2;
+}
+
+// check if PIN is needed and enter PIN 1111 
+uint8_t checkpin()
+{
+
+  uint8_t initialized2;
+     // readline and wait for PIN CODE STATUS if needed send PIN 1111 to SIM card if required
+                  initialized2 = 0;
+              do { 
+		delay_2s();
+               uart_puts_P(SHOW_PIN);
+                if (readline()>0)
+                   {
+        	   delay_1s();   
+
+                    memcpy_P(buf, PIN_IS_READY, sizeof(PIN_IS_READY));
+                  if (is_in_rx_buffer(response, buf ) == 1)       initialized2 = 1;                                         
+                    memcpy_P(buf, PIN_MUST_BE_ENTERED, sizeof(PIN_MUST_BE_ENTERED));
+                  if (is_in_rx_buffer(response, buf) == 1)     uart_puts_P(ENTER_PIN);   // ENTER PIN 1111                                      
+                    };
+                  
+              } while (initialized2 == 0);
+   return initialized2;
+}
+
+// check if registered to the network
+uint8_t checkregistration()
+{
+  uint8_t initialized2, attempt2;
+     // readline and wait for STATUS NETWORK REGISTRATION from SIM800L
+     // first 3 networks preferred from SIM list are OK
+                  initialized2 = 0;
+                  attempt2 = 0;
+              do { 
+		delay_2s();
+                 uart_puts_P(SHOW_REGISTRATION);
+                if (readline()>0)
+                   {			   
+                    memcpy_P(buf, ISREG1, sizeof(ISREG1));
+                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1; 
+                    memcpy_P(buf, ISREG2, sizeof(ISREG2));
+                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1; 
+                    memcpy_P(buf, ISREG3, sizeof(ISREG3));
+                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1; 
+                   };
+                    // check if we need to restart the RADIO
+                if (initialized2 == 0)  // put to flight mode for 10sec and back to register the network
+                   { uart_puts_P(FLIGHTON);
+                     attempt2 = waitforresponse();
+                     delay_10s();
+                     uart_puts_P(FLIGHTOFF);
+                     attempt2 = waitforresponse();
+                     delay_10s();
+                     attempt2 = 0;
+                   }
+                } while (initialized2 == 0);
+      return initialized2;
+};
+ 
+
+// provision GPRS APNs and passwords
+uint8_t provisiongprs()
+{
+     // connection to GPRS for AGPS basestation data - provision APN and username
+               	delay_1s();
+               uart_puts_P(SAPBR1);
+		delay_1s();
+               uart_puts_P(SAPBR2);
+             // only if username password in APN is needed
+		delay_1s();
+               uart_puts_P(SAPBR3);
+		delay_1s();
+               uart_puts_P(SAPBR4);
+        	delay_1s();   
+  return 1;
+}
+
+
 // *********************************************************************************************************
 //
 //                                                    MAIN PROGRAM
@@ -431,106 +546,64 @@ int main(void) {
 
   uint8_t initialized, attempt = 0;
 
-  char buf[20];  // buffer to copy string from PROGMEM
+  //char buf[20];  // buffer to copy string from PROGMEM
+
  
   // initialize 9600 baud 8N1 RS232
   init_uart();
 
   // delay 10 seconds for safe SIM800L startup and network registration
   delay_10s();
+           
+  // check status of all functions
+        initialized = checkat();
+        initialized = checkpin();
+        initialized = checkregistration();
+        initialized = provisiongprs();
+
  
-// wait for first OK while sending AT - autosensing speed on SIM800L, but we are working 9600 bps
-// SIM 800L can be set by AT+IPR=9600  to fix this speed
-// which I do recommend
-
-                 initialized = 0;
-              do { 
-		delay_2s();
-               uart_puts_P(AT);
-                if (readline()>0)
-                   {
-                    memcpy_P(&buf, &ISOK, sizeof(ISOK));                     
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 1; 
-                   // just debug
-               // uart_puts_P(response);                   
-                   };
-               } while (initialized == 0);
-
-        // send ECHO OFF
-		delay_2s();
-                 uart_puts_P(ECHO_OFF);
-
-     // readline and wait for PIN CODE STATUS if needed send PIN 1111 to SIM card if required
-                  initialized = 0;
-              do { 
-		delay_2s();
-               uart_puts_P(SHOW_PIN);
-                if (readline()>0)
-                   {
-        	   delay_1s();   
-
-                    memcpy_P(&buf, &PIN_IS_READY, sizeof(PIN_IS_READY));
-                  if (is_in_rx_buffer(response, buf ) == 1)       initialized = 1;                                         
-                    memcpy_P(&buf, &PIN_MUST_BE_ENTERED, sizeof(PIN_MUST_BE_ENTERED));
-                  if (is_in_rx_buffer(response, buf) == 1)     uart_puts_P(ENTER_PIN);   // ENTER PIN 1111                                      
-                    };
-                  
-              } while (initialized == 0);
- 
-     // readline and wait for STATUS NETWORK REGISTRATION from SIM800L
-     // first 3 networks preferred from SIM list are OK
-                  initialized = 0;
-              do { 
-		delay_2s();
-                 uart_puts_P(SHOW_REGISTRATION);
-                if (readline()>0)
-                   {			   
-                    memcpy_P(&buf, &ISREG1, sizeof(ISREG1));
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 1; 
-                    memcpy_P(&buf, &ISREG2, sizeof(ISREG2));
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 1; 
-                    memcpy_P(&buf, &ISREG3, sizeof(ISREG3));
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 1; 
-                   };
-              } while (initialized == 0);
-
        // read phone number of incoming voice call by CLIP, will be needed for SMS sending 
 		delay_2s();
                 uart_puts_P(CLIP); 
-
-     // connection to GPRS for AGPS basestation data - provision APN and username
-               	delay_1s();
-               uart_puts_P(SAPBR1);
-		delay_1s();
-               uart_puts_P(SAPBR2);
-             // only if username password in APN is needed
-		delay_1s();
-               uart_puts_P(SAPBR3);
-		delay_1s();
-               uart_puts_P(SAPBR4);   
+		delay_2s();
     
 
      // neverending LOOP
 
        while (1) {
-               // WAIT FOR RING message - incoming voice call
-		delay_2s();
-                 initialized = 0;
+     
+              // WAIT FOR RING message - incoming voice call, restart RADIO module if no signal
+                initialized = 0;
              do { 
                 if (readline()>0)
                    {
-                    memcpy_P(&buf, &ISRING, sizeof(ISRING));                     
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 1; 
+                    memcpy_P(buf, ISRING, sizeof(ISRING));  
+                    if (is_in_rx_buffer(response, buf) == 1) 
                      { initialized = 1; 
-                         readphonenumber(); 
+                        readphonenumber(); 
                         delay_1s();
                       // hangup a call and proceed with sending SMS                  
                        uart_puts_P(HANGUP); 
-                       };                          };
+                       }
+                     // if some other message than RING check if network is avaialble and SIM800L is operational  
+                     else 
+                      {
+                      // check if network is available or there is a need to restart RADIO
+                       initialized = checkat();    // maybe SIM800L  restarted itself ?
+                      // check status of all functions 
+                       initialized = checkpin();
+                       initialized = checkregistration();
+                       initialized = provisiongprs();
+                      // read phone number of incoming voice call by CLIP, will be needed for SMS sending       
+                      uart_puts_P(CLIP);
+                      delay_2s();
+                      initialized = 0;
+                      };
+                    };
                   } while ( initialized == 0);
                initialized = 0;
 
-           // Create connection to GPRS network - 3 attempts if needed
+           // Create connection to GPRS network - 3 attempts if needed, if not succesfull restart the modem 
            attempt = 0;
            do { 
 
@@ -540,29 +613,32 @@ int main(void) {
               initialized = waitforresponse();
 
            // query PDP context for IP address after several seconds
-           // check if GPRS attach was succesfull
+           // check if GPRS attach was succesfull, do it several times if needed
               delay_5s();
               uart_puts_P(SAPBRQUERY);
               initialized = 0;  
                if (readline()>0)
                    {
                    // checking for not attached
-                    memcpy_P(&buf, &SAPBRNOTSUCC, sizeof(SAPBRNOTSUCC));                     
+                    memcpy_P(buf, SAPBRNOTSUCC, sizeof(SAPBRNOTSUCC));                     
                    if (is_in_rx_buffer(response, buf) == 1)  initialized = 0;
                    // checking for properly attached
-                    memcpy_P(&buf, &SAPBRSUCC, sizeof(SAPBRSUCC));                     
+                    memcpy_P(buf, SAPBRSUCC, sizeof(SAPBRSUCC));                     
                    if (is_in_rx_buffer(response, buf) == 1)  initialized = 1;
                    // other responses simply ignored as there was no attach
                     };
             // increase attempt counter and repeat until not attached
             attempt++;
             } while ( (attempt < 3) && (initialized == 0) );
- 
+           
 
-           // GET GPS LOCATION OF BASE STATION and send over SMS with google map loc
+           // if GPRS was  succesfull the it is time send cell info to Google and query the GPS location
+           if (initialized == 1)
+           {
+           // GET CELL ID OF BASE STATION and query Google for coordinates then send over SMS with google map loc
         	delay_2s();
                uart_puts_P(CHECKGPS);
-               // wait for cellid list 
+               // parse GPS coordinates from the answer to SMS buffer
                readcellgps();
                 // send a SMS in plain text format
                uart_puts_P(SMS1);
@@ -591,9 +667,11 @@ int main(void) {
           //and close the bearer 
               delay_5s();
               uart_puts_P(SAPBRCLOSE);
-              initialized = waitforresponse();
-          
+              attempt = waitforresponse();
+          } /// end of commands when GPRS is working
 
+		delay_2s();
+           
         // end of neverending loop
         };
 
