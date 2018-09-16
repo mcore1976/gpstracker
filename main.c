@@ -45,7 +45,7 @@ const char CRLF[] PROGMEM = {"\"\n\r"};
 const char CLIP[] PROGMEM = {"AT+CLIP=1\r\n"};
 
 // Flightmode ON OFF
-const char FLIGHTON[] PROGMEM = { "AT+CFUN=0\r\n" };
+const char FLIGHTON[] PROGMEM = { "AT+CFUN=4\r\n" };
 const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
 
 
