@@ -24,11 +24,11 @@
 const char AT[] PROGMEM = { "AT\n\r" };
 const char ISOK[] PROGMEM = { "OK" };
 const char ISERROR[] PROGMEM = { "ERROR" };
+const char ISDEACT[] PROGMEM = { "DEACT" };
 const char ISRING[] PROGMEM = { "RING" };
 const char ISREG1[] PROGMEM = { "+CREG: 0,1" };
 const char ISREG2[] PROGMEM = { "+CREG: 0,2" };
 const char ISREG3[] PROGMEM = { "+CREG: 0,3" };
-const char ISSABR[] PROGMEM = { "+SABR" };
 const char SHOW_REGISTRATION[] PROGMEM = {"AT+CREG?\n\r"};
 const char PIN_IS_READY[] PROGMEM = {"+CPIN: READY"};
 const char PIN_MUST_BE_ENTERED[] PROGMEM = {"+CPIN: SIM PIN"};
@@ -48,7 +48,6 @@ const char CLIP[] PROGMEM = {"AT+CLIP=1\r\n"};
 const char FLIGHTON[] PROGMEM = { "AT+CFUN=4\r\n" };
 const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
 
-
 // for sending SMS predefined text 
 const char GOOGLELOC1[] PROGMEM = {"\r\n http://maps.google.com/maps?q="};
 const char GOOGLELOC2[] PROGMEM = {","};
@@ -63,10 +62,8 @@ const char SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,\"PWD\",\"internet\"\r\n"};
 const char SAPBROPEN[] PROGMEM = {"AT+SAPBR=1,1\r\n"};  // open IP bearer
 const char SAPBRQUERY[] PROGMEM = {"AT+SAPBR=2,1\r\n"};  // query IP bearer
 const char SAPBRCLOSE[] PROGMEM = {"AT+SAPBR=0,1\r\n"};   // close bearer 
-const char SAPBRNOTSUCC[] PROGMEM = {"+SAPBR: 1,3,\"0.0.0.0\""}; // bearer was not succesfull
 const char SAPBRSUCC[] PROGMEM = {"+SAPBR: 1,1"}; // bearer was succesfull we are not checking IP assigned
 const char CHECKGPS[] PROGMEM = {"AT+CIPGSMLOC=1,1\r\n"};  // check AGPS position of nearest GSM CELL 
-
 
 
 // Initialize UART to 9600 baud with 8N1. 
@@ -309,7 +306,7 @@ uint8_t readphonenumber()
 return (1);
 }
 
-// WAIT FOR RESPONSE OK or ERROR - whatever
+// WAIT FOR RESPONSE OK or XXX ERROR or xxx DEACT - whatever
 uint8_t waitforresponse()
 { 
   uint8_t initialized2 = 0;
@@ -322,7 +319,9 @@ uint8_t waitforresponse()
                     memcpy_P(buf2, ISOK, sizeof(ISOK));                     
                    if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
                     memcpy_P(buf2, ISERROR, sizeof(ISERROR));                     
-                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 0; 
+                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
+                    memcpy_P(buf2, ISDEACT, sizeof(ISDEACT));                     
+                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
                    };
                } while (initialized2 == 0);
 return (initialized2);
@@ -571,10 +570,11 @@ int main(void) {
      // neverending LOOP
 
        while (1) {
-     
-              // WAIT FOR RING message - incoming voice call, restart RADIO module if no signal
+  
+              // WAIT FOR RING message - incoming voice call and send SMS or restart RADIO module if no signal
                 initialized = 0;
              do { 
+               // wait for RING message or any other message
                 if (readline()>0)
                    {
                     memcpy_P(buf, ISRING, sizeof(ISRING));  
@@ -607,6 +607,11 @@ int main(void) {
            attempt = 0;
            do { 
 
+            //and close the bearer first maybe there was an error or something
+              delay_2s();
+              uart_puts_P(SAPBRCLOSE);
+              attempt = waitforresponse();
+
            // make GPRS network attach and open IP bearer
               delay_2s();
               uart_puts_P(SAPBROPEN);
@@ -619,9 +624,6 @@ int main(void) {
               initialized = 0;  
                if (readline()>0)
                    {
-                   // checking for not attached
-                    memcpy_P(buf, SAPBRNOTSUCC, sizeof(SAPBRNOTSUCC));                     
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized = 0;
                    // checking for properly attached
                     memcpy_P(buf, SAPBRSUCC, sizeof(SAPBRSUCC));                     
                    if (is_in_rx_buffer(response, buf) == 1)  initialized = 1;
@@ -668,9 +670,10 @@ int main(void) {
               delay_5s();
               uart_puts_P(SAPBRCLOSE);
               attempt = waitforresponse();
+
           } /// end of commands when GPRS is working
 
-		delay_2s();
+        	      delay_2s();
            
         // end of neverending loop
         };
