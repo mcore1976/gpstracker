@@ -475,7 +475,10 @@ uint8_t checkpin()
                     memcpy_P(buf, PIN_IS_READY, sizeof(PIN_IS_READY));
                   if (is_in_rx_buffer(response, buf ) == 1)       initialized2 = 1;                                         
                     memcpy_P(buf, PIN_MUST_BE_ENTERED, sizeof(PIN_MUST_BE_ENTERED));
-                  if (is_in_rx_buffer(response, buf) == 1)     uart_puts_P(ENTER_PIN);   // ENTER PIN 1111                                      
+                  if (is_in_rx_buffer(response, buf) == 1)     
+                        {  uart_puts_P(ENTER_PIN);   // ENTER PIN 1111
+                           delay_2s();
+                        };                  
                     };
                   
               } while (initialized2 == 0);
@@ -610,7 +613,7 @@ int main(void) {
             //and close the bearer first maybe there was an error or something
               delay_2s();
               uart_puts_P(SAPBRCLOSE);
-              attempt = waitforresponse();
+              initialized = waitforresponse();
 
            // make GPRS network attach and open IP bearer
               delay_2s();
@@ -619,10 +622,10 @@ int main(void) {
 
            // query PDP context for IP address after several seconds
            // check if GPRS attach was succesfull, do it several times if needed
+             initialized = 0; 
               delay_5s();
               uart_puts_P(SAPBRQUERY);
-              initialized = 0;  
-               if (readline()>0)
+              if (readline()>0)
                    {
                    // checking for properly attached
                     memcpy_P(buf, SAPBRSUCC, sizeof(SAPBRSUCC));                     
