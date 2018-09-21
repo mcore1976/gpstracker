@@ -646,7 +646,7 @@ int main(void) {
 
           } /// end of commands when GPRS is working
 
-           delay_2s();
+           delay_10s();
            
         // end of neverending loop
         };
