@@ -23,8 +23,6 @@
 
 const char AT[] PROGMEM = { "AT\n\r" };
 const char ISOK[] PROGMEM = { "OK" };
-const char ISERROR[] PROGMEM = { "ERROR" };
-const char ISDEACT[] PROGMEM = { "DEACT" };
 const char ISRING[] PROGMEM = { "RING" };
 const char ISREG1[] PROGMEM = { "+CREG: 0,1" };
 const char ISREG2[] PROGMEM = { "+CREG: 0,2" };
@@ -306,26 +304,7 @@ uint8_t readphonenumber()
 return (1);
 }
 
-// WAIT FOR RESPONSE OK or XXX ERROR or xxx DEACT - whatever
-uint8_t waitforresponse()
-{ 
-  uint8_t initialized2 = 0;
-  char buf2[10];  // buffer to copy string from PROGMEM
 
-               initialized2 = 0; 
-               do {  
-                if (readline()>0)
-                   {
-                    memcpy_P(buf2, ISOK, sizeof(ISOK));                     
-                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
-                    memcpy_P(buf2, ISERROR, sizeof(ISERROR));                     
-                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
-                    memcpy_P(buf2, ISDEACT, sizeof(ISDEACT));                     
-                   if (is_in_rx_buffer(response, buf2) == 1)  initialized2 = 1; 
-                   };
-               } while (initialized2 == 0);
-return (initialized2);
-};
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // delay procedures ASM based because _delay_ms() is working bad for 8 MHz clock MCU
@@ -445,9 +424,7 @@ uint8_t checkat()
                 if (readline()>0)
                    {
                     memcpy_P(buf, ISOK, sizeof(ISOK));                     
-                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1; 
-                   // just debug
-               // uart_puts_P(response);                   
+                   if (is_in_rx_buffer(response, buf) == 1)  initialized2 = 1;                  
                    };
                } while (initialized2 == 0);
 
@@ -492,7 +469,6 @@ uint8_t checkregistration()
      // readline and wait for STATUS NETWORK REGISTRATION from SIM800L
      // first 3 networks preferred from SIM list are OK
                   initialized2 = 0;
-                  attempt2 = 0;
               do { 
 		delay_2s();
                  uart_puts_P(SHOW_REGISTRATION);
@@ -508,19 +484,16 @@ uint8_t checkregistration()
                     // check if we need to restart the RADIO
                 if (initialized2 == 0)  // put to flight mode for 10sec and back to register the network
                    { uart_puts_P(FLIGHTON);
-                     attempt2 = waitforresponse();
                      delay_10s();
                      uart_puts_P(FLIGHTOFF);
-                     attempt2 = waitforresponse();
                      delay_10s();
-                     attempt2 = 0;
                    }
                 } while (initialized2 == 0);
       return initialized2;
 };
  
 
-// provision GPRS APNs and passwords
+// provision GPRS APNs and passwords - we are not checking if any error 
 uint8_t provisiongprs()
 {
      // connection to GPRS for AGPS basestation data - provision APN and username
@@ -613,12 +586,10 @@ int main(void) {
             //and close the bearer first maybe there was an error or something
               delay_2s();
               uart_puts_P(SAPBRCLOSE);
-              initialized = waitforresponse();
-
+           
            // make GPRS network attach and open IP bearer
               delay_2s();
               uart_puts_P(SAPBROPEN);
-              initialized = waitforresponse();
 
            // query PDP context for IP address after several seconds
            // check if GPRS attach was succesfull, do it several times if needed
@@ -669,14 +640,13 @@ int main(void) {
                delay_1s(); 
                send_uart(26);   // ctrl Z to end SMS
 
-          //and close the bearer 
+              //and close the bearer 
               delay_5s();
               uart_puts_P(SAPBRCLOSE);
-              attempt = waitforresponse();
 
           } /// end of commands when GPRS is working
 
-        	      delay_2s();
+           delay_2s();
            
         // end of neverending loop
         };
