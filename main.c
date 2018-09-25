@@ -21,7 +21,7 @@
 // for 8Meg : -U lfuse:w:0xe4:m -U hfuse:w:0xdf:m 
 #define F_CPU 8000000UL
 
-const char AT[] PROGMEM = { "AT\n\r" };
+const char AT[] PROGMEM = { "  AT\n\r" }; // SPACE for wakeup from sleep mode
 const char ISOK[] PROGMEM = { "OK" };
 const char ISRING[] PROGMEM = { "RING" };
 const char ISREG1[] PROGMEM = { "+CREG: 0,1" };
@@ -45,6 +45,11 @@ const char CLIP[] PROGMEM = {"AT+CLIP=1\r\n"};
 // Flightmode ON OFF
 const char FLIGHTON[] PROGMEM = { "AT+CFUN=4\r\n" };
 const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
+
+// Sleepmode ON OFF
+const char SLEEPON[] PROGMEM = { "AT+CSCLK=2\r\n" };
+const char SLEEPOFF[] PROGMEM = { "AT+CSCLK=0\r\n" };
+
 
 // for sending SMS predefined text 
 const char GOOGLELOC1[] PROGMEM = {"\r\n http://maps.google.com/maps?q="};
@@ -542,6 +547,10 @@ int main(void) {
                 uart_puts_P(CLIP); 
 		delay_2s();
     
+      // enter SLEEP MODE for power saving ( will be interrupted by incoming voice call or SMS ) 
+                uart_puts_P(SLEEPON); 
+		delay_2s();
+
 
      // neverending LOOP
 
@@ -557,13 +566,23 @@ int main(void) {
                     if (is_in_rx_buffer(response, buf) == 1) 
                      { initialized = 1; 
                         readphonenumber(); 
+                      // disable SLEEPMODE , hangup a call and proceed with sending SMS                  
+                       uart_puts_P(AT);
                         delay_1s();
-                      // hangup a call and proceed with sending SMS                  
-                       uart_puts_P(HANGUP); 
-                       }
+                       uart_puts_P(SLEEPOFF);
+                        delay_1s();
+                       uart_puts_P(HANGUP);
+                        delay_1s();
+                                              }
                      // if some other message than RING check if network is avaialble and SIM800L is operational  
                      else 
                       {
+
+                      // disable SLEEPMODE                  
+                       uart_puts_P(AT);
+                        delay_1s();
+                       uart_puts_P(SLEEPOFF);
+                        delay_1s();
                       // check if network is available or there is a need to restart RADIO
                        initialized = checkat();    // maybe SIM800L  restarted itself ?
                       // check status of all functions 
@@ -645,9 +664,12 @@ int main(void) {
               uart_puts_P(SAPBRCLOSE);
 
           } /// end of commands when GPRS is working
-
-           delay_10s();
-           
+       
+        delay_10s();
+        // enter sleepmode again for power saving
+        uart_puts_P(SLEEPON);
+        delay_1s();
+   
         // end of neverending loop
         };
 
