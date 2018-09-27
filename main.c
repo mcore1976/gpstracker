@@ -583,8 +583,6 @@ int main(void) {
                         delay_1s();
                        uart_puts_P(SLEEPOFF);
                         delay_1s();
-                      // check if network is available or there is a need to restart RADIO
-                       initialized = checkat();    // maybe SIM800L  restarted itself ?
                       // check status of all functions 
                        initialized = checkpin();
                        initialized = checkregistration();
