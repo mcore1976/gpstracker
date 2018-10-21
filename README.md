@@ -32,3 +32,7 @@ b) powering from USB 5V Powerbanks - it is good to use the cheapest USB powerban
 c) Powering from 3 x AA battery pack (LR6). Estimated working time on set of batteries is more than 1 month due to low current ( less than 2mA). Batteries must be connected directly to VCC on ATTINY/SIM8XX without any diodes. This will give 4.5V of powering voltage. Avoid Ni-Mh Accumulators. They give only 1.2V each. 
 
 The solution has been field tested and works without a glitch. 
+
+You can see how it works :
+here :      https://www.youtube.com/watch?v=t7mvomytDq4
+and here :  https://www.youtube.com/watch?v=546j1f_qA50
