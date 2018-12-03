@@ -28,7 +28,7 @@ The ATTINY/ATMEGA wakes up when SIM8xx PIN RING goes to GND (in case of incoming
 When SIM8xx module sends SMS/GPRS data it it may draw a lot of current ( up to 2A ) in short peaks so it is crucial to use good cables and thick copper lines for GND and VCC on PCB. This is the main issue people face when dealing with SIM8xx/9xx modules. The voltage may additionaly drop during this situation so that is why such big capacitor is in use. 
 In the design there are 1N4007 diodes connected in serial+parallel to ensure that voltage is dropped to correct levels (when powered from car/bike battery or USB 5V powerbank) which is around 4,4V for SIM8XX module (5V would damage SIM800L) and 2A current can be handled. Also we have to secure that during current peaks the voltage will not drop below 3V for SIM800L ( otherwise SIM800L would restart itself during SMS/GPRS). 
 
-The tracker can be powered 3 ways : 
+The tracker can be powered 3 ways  ( and depending on powering method you can get rid of LM7805 or some 1N4007 diodes to simplify the design): 
 
 a) powering directly from car/bike battery - ensure that proper cables are used (must sustain 2Amps) and attach small heatsink to LM7805 TO220 case. It will not get hot all the time but ensure that current/heat protection within LM7805 would not activate. In such case the tracker will consume in standby something like 12mA due to LM7805 drop (conversion from 12V to 5V). You may try to put some replacement of LM7805 like switching power supply step-down converter.
 
