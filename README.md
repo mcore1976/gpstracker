@@ -12,6 +12,11 @@ The part list is (with the cost as in 2018):
 - 100nF capacitor (0.2 USD) 
 - universal PCB, pins & connector (2 USD) 
 
+To upload porgram code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this : page http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
+
+The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "avr-gcc" and "avrdude". For example in Ubuntu download these packages using command : "sudo apt-get install avr-gcc"  and "sudo apt-get install avrdude"  and you are ready to go. 
+
+
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory is gets full.
 Considering the SIM800L capability if more Flash memory is available ( ATTINY 4313 with 4KB or ATMEGA328P) the chip could even upload the GPS data to some EMAIL/FTP/HTTP server to get car tracking history. 
