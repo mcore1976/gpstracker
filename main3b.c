@@ -6,6 +6,8 @@
  * please configure SIM800L to fixed 9600 first by AT+IPR=9600 command 
  * to ensure stability ans save config via AT&W command
  * in this program ATTINY never goes to sleep - there is no INT0 / RING interrupt
+ * but FCPU clock is lowered to 1MHz so we get total power consumption ~5mA
+ * (SIM800L takes 2mA of it) and working time is 2 weeks on 3xAA batteries
  * ---------------------------------------------------------------------------
  */
 
@@ -21,9 +23,9 @@
 #include <avr/power.h>
 
 #define UART_NO_DATA 0x0100
-// internal RC oscillator with NO DIVISION, gives 0.2% error rate for 9600 bps UART speed
-// for 8Meg : -U lfuse:w:0xe4:m -U hfuse:w:0xdf:m 
-#define F_CPU 8000000UL
+// internal RC 8MHz oscillator with DIVISION by 8, gives 0.2% error rate for 9600 bps UART speed
+// for 1Meg  : -U lfuse:w:0x64:m -U hfuse:w:0xdf:m 
+#define F_CPU 1000000UL
 
 const char AT[] PROGMEM = { "  AT\n\r" }; // SPACE for wakeup from sleep mode
 const char ISOK[] PROGMEM = { "OK" };
@@ -104,19 +106,13 @@ void uart_puts_P(const char *s);
 #define FALSE 0 
 #endif
 
-//#define BAUD 19200
+
 #define BAUD 9600
-// 4.096MHz
-//  4800: 52.3333333
-//  9600: 25.6666667
-// 14400: 16.7777778
-// 19600: 12.06
-// 28800: 7.8889
-// 38400: 5.6667
+// there is FCPU = 8MHz with division by 8 clock = 1MHz, and we are using U2X bit for better accuracy
+// UBRR formula for U2X = 1
+#define MYUBBR ((F_CPU / (BAUD * 8L)) - 1)
 
-#define MYUBBR ((F_CPU / (BAUD * 16L)) - 1)
 #define BUFFER_SIZE 40
-
 // buffers for number of phone, responses from modem, longtitude & latitude data
 volatile static uint8_t response[BUFFER_SIZE] = "1234567890123456789012345678901234567890";
 volatile static uint8_t response_pos = 0;
@@ -129,10 +125,13 @@ volatile static uint8_t longtitude_pos = 0;
 volatile static uint8_t buf[20];  // buffer to copy string from PROGMEM
 
 
-/*
- * init_uart
- */
+// -----------------------------------------------------------------------------------------------------------
+// init_uart
+// -----------------------------------------------------------------------------------------------------------
 void init_uart(void) {
+
+  // set U2X bit so we can get 9600baud with lowest error rate 0.2%
+  UCSRA = (1 << U2X);
   // set baud rate
   UBRRH = (uint8_t)(MYUBBR >> 8); 
   UBRRL = (uint8_t)(MYUBBR);
@@ -146,10 +145,10 @@ void init_uart(void) {
 
 
 
-/*
- * send_uart
- * Sends a single char to UART without ISR
- */
+// -----------------------------------------------------------------------------------------------------------
+// send_uart
+//  Sends a single char to UART without ISR
+// -----------------------------------------------------------------------------------------------------------
 void send_uart(uint8_t c) {
   // wait for empty data register
   while (!(UCSRA & (1<<UDRE)));
@@ -159,10 +158,11 @@ void send_uart(uint8_t c) {
 
 
 
-/*
- * receive_uart
- * Receives a single char without ISR
- */
+// -----------------------------------------------------------------------------------------------------------
+// receive_uart
+// Receives a single char without ISR
+// -----------------------------------------------------------------------------------------------------------
+
 uint8_t receive_uart() {
   while ( !(UCSRA & (1<<RXC)) ) 
     ; 
@@ -170,8 +170,9 @@ uint8_t receive_uart() {
 }
 
 
-
+// -----------------------------------------------------------------------------------------------------------
 // function to search RX buffer for response  SUB IN RX_BUFFER STR
+// -----------------------------------------------------------------------------------------------------------
 uint8_t is_in_rx_buffer(char *str, char *sub) {
    uint8_t i, j=0, k;
     for(i=0; i<BUFFER_SIZE; i++)
@@ -190,10 +191,10 @@ uint8_t is_in_rx_buffer(char *str, char *sub) {
 
  
 
-/*
- * uart_puts
- * Sends a string.
- */
+// -----------------------------------------------------------------------------------------------------------
+// uart_puts
+// Sends a string.
+// -----------------------------------------------------------------------------------------------------------
 void uart_puts(const char *s) {
   while (*s) {
     send_uart(*s);
@@ -203,10 +204,10 @@ void uart_puts(const char *s) {
 
 
 
-/*
- * uart_puts_P
- * Sends a PROGMEM string.
- */
+// -----------------------------------------------------------------------------------------------------------
+// uart_puts_P
+// Sends a PROGMEM string.
+// -----------------------------------------------------------------------------------------------------------
 void uart_puts_P(const char *s) {
   while (pgm_read_byte(s) != 0x00) {
     send_uart(pgm_read_byte(s++));
@@ -250,9 +251,9 @@ return(1);
 }
 
 
-// --------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 // READ CELL GPS from AT+CIPGSMLOC output and put output to 'lattitude' and 'longtitude' buffers
-// --------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------
 uint8_t readcellgps()
 {
   uint16_t char1;
@@ -344,20 +345,23 @@ while(i > 0)
 // Generated by delay loop calculator
 // at http://www.bretmulvey.com/avrdelay.html
 //
-// Delay 8 000 000 cycles
-// 1s at 8.0 MHz
+// Delay 1 000 000 cycles
+// 1s at 1 MHz
 
 asm volatile (
-    "    ldi  r18, 41"	"\n"
-    "    ldi  r19, 150"	"\n"
-    "    ldi  r20, 128"	"\n"
+    "    ldi  r18, 6"	"\n"
+    "    ldi  r19, 19"	"\n"
+    "    ldi  r20, 174"	"\n"
     "1:  dec  r20"	"\n"
     "    brne 1b"	"\n"
     "    dec  r19"	"\n"
     "    brne 1b"	"\n"
     "    dec  r18"	"\n"
     "    brne 1b"	"\n"
+    "    rjmp 1f"	"\n"
+    "1:"	"\n"
 );
+
 
 i--;  // decrease another second
 
@@ -393,7 +397,6 @@ uint8_t checkat()
                } while (initialized2 == 0);
 
         // send ECHO OFF
-		delay_sec(2);
                 uart_puts_P(ECHO_OFF);
 
              return initialized2;
@@ -641,8 +644,8 @@ int main(void) {
                delay_sec(1); 
                // compose an SMS from fragments - interactive mode CTRL Z at the end
                uart_puts_P(SMS2);
-			   uart_puts(phonenumber);  // send phone number received from CLIP
-			   uart_puts_P(CRLF);   			   
+	       uart_puts(phonenumber);  // send phone number received from CLIP
+	       uart_puts_P(CRLF);   			   
                delay_sec(1); 
                // put info about DATE,TIME, LONG, LATT
                uart_puts(response);  // send Date & Time info from AGPS cell info
