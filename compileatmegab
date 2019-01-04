@@ -1,0 +1,9 @@
+rm *.elf
+rm *.o
+rm *.hex
+avr-gcc -mmcu=atmega328p -std=gnu99 -Wall -Os -o mainb.elf mainb.c -w
+avr-objcopy -j .text -j .data -O ihex mainb.elf mainb.hex
+avr-size --mcu=atmega328p --format=avr mainb.elf
+# fuse = 62 for internal 8Meg with div 8 = 1MHz
+sudo avrdude -c usbasp -p m328p -U lfuse:w:0x62:m  -U flash:w:"mainb.hex":a
+
