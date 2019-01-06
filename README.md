@@ -23,9 +23,11 @@ The code is written in avr-gcc and was uploaded via USBASP. Both binary output v
 Source file options : 
 
 main.c - file for ATMEGA328P when RI/RING is CONNECTED to SIM800L - the lowest power consumption (<3mA)
+
 mainb.c - file for ATMEGA328P when RI/RING is NOT CONNECTED to SIM800L - this version is most stable now but power consumption is slightly higher (~6mA)
 
 main3.c - file for ATTINY2313 when RI/RING is CONNECTED to SIM800L - the lowest power consumption (<2mA)
+
 mainb.c - file for ATTINY2313 when RI/RING is NOT CONNECTED to SIM800L - this version is most stable now but power consumption is slightly higher (5mA)
 
 
