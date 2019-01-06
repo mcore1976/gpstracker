@@ -19,10 +19,20 @@ The script attached in repository  ( "compileatmega" or "compileattiny" ) can be
 
 
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
-For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory is gets full.
-Considering the SIM800L capability if more Flash memory is available ( ATTINY 4313 with 4KB or ATMEGA328P) the chip could even upload the GPS data to some EMAIL/FTP/HTTP server to get car tracking history. 
 
-The solution has ultra low power consumption because it is utilizing SLEEP MODE on SIM8XX/9XX module and POWER DOWN feature on ATTINY/ATMEGA MCU (current in standby is below 2mA ) and connects to GPRS/polls GPS only upon request. Also the LED on the SIM800L is switched off to further reduce current consumption.
+Source file options : 
+
+main.c - file for ATMEGA328P when RI/RING is CONNECTED to SIM800L - the lowest power consumption (<3mA)
+mainb.c - file for ATMEGA328P when RI/RING is NOT CONNECTED to SIM800L - this version is most stable now but power consumption is slightly higher (~6mA)
+
+main3.c - file for ATTINY2313 when RI/RING is CONNECTED to SIM800L - the lowest power consumption (<2mA)
+mainb.c - file for ATTINY2313 when RI/RING is NOT CONNECTED to SIM800L - this version is most stable now but power consumption is slightly higher (5mA)
+
+
+For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory gets completely full.
+Considering the SIM800L capability if more Flash memory is available (ATMEGA328P) the chip could even upload the GPS data to some EMAIL/FTP/HTTP server to get car tracking history. In source files above same functions are available for ATTINY2313 and ATMEGA328P
+
+The solution has ultra low power consumption because it is utilizing SLEEP MODE on SIM8XX/9XX module and POWER DOWN feature on ATTINY/ATMEGA MCU (current in standby is below 2mA, but only when signal RI/RING from SIM800L is connected to MCU) and connects to GPRS/polls GPS only upon request. Also the LED on the SIM800L is switched off to further reduce current consumption.
 This will give you something like at least 1 month of work time on smallest USB powerbanks like 2000mAh or 3xAA battery ( I personally do recommed to connect to the 3xAA because powerbanks have LED and converters that drain extra current). 
 The ATTINY/ATMEGA wakes up when SIM8xx PIN RING goes to GND (in case of incoming call or SMS or MODULE RESTART - "Call Ready" message from URC). 
 
