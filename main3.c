@@ -23,11 +23,16 @@
 #include <avr/power.h>
 
 #define UART_NO_DATA 0x0100
-// internal RC oscillator with NO DIVISION, gives 0.2% error rate for 9600 bps UART speed
-// for 8Meg : -U lfuse:w:0xe4:m -U hfuse:w:0xdf:m 
-#define F_CPU 8000000UL
+// internal RC 8MHz oscillator with DIVISION by 8, gives 0.2% error rate for 9600 bps UART speed
+// for 1Meg  : -U lfuse:w:0x64:m -U hfuse:w:0xdf:m 
+#define F_CPU 1000000UL
 
-const char AT[] PROGMEM = { "  AT\n\r" }; // SPACE for wakeup from sleep mode
+#define BAUD 9600
+// there is FCPU = 8MHz with division by 8 clock = 1MHz, and we are using U2X bit for better accuracy
+// UBRR formula for U2X = 1
+#define MYUBBR ((F_CPU / (BAUD * 8L)) - 1)
+
+const char AT[] PROGMEM = { "AT\n\r" }; // wakeup from sleep mode
 const char ISOK[] PROGMEM = { "OK" };
 const char ISRING[] PROGMEM = { "RING" };
 const char ISREG1[] PROGMEM = { "+CREG: 0,1" };  // registered in HPLMN
@@ -49,8 +54,8 @@ const char CRLF[] PROGMEM = {"\"\n\r"};
 const char CLIP[] PROGMEM = {"AT+CLIP=1\r\n"};
 
 // Flightmode ON OFF - for saving battery in underground garage
-//const char FLIGHTON[] PROGMEM = { "AT+CFUN=4\r\n" };
-//const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
+const char FLIGHTON[] PROGMEM = { "AT+CFUN=4\r\n" };
+const char FLIGHTOFF[] PROGMEM = { "AT+CFUN=1\r\n" };
 
 // Sleepmode ON OFF
 const char SLEEPON[] PROGMEM = { "AT+CSCLK=2\r\n" };
@@ -63,7 +68,7 @@ const char SET9600[] PROGMEM = { "AT+IPR=9600\r\n" };
 const char SAVECNF[] PROGMEM = { "AT&W\r\n" };
 
 // Disable SIM800L LED for further reduction of power consumption
-const char DISABLELED[] PROGMEM = { "AT+CNETLIGHT=0\r\n" };
+//const char DISABLELED[] PROGMEM = { "AT+CNETLIGHT=0\r\n" };
 
 // for sending SMS predefined text 
 const char GOOGLELOC1[] PROGMEM = {"\r\n http://maps.google.com/maps?q="};
@@ -80,44 +85,14 @@ const char SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,\"APN\",\"internet\"\r\n"};    // P
 const char SAPBR3[] PROGMEM = {"AT+SAPBR=3,1,\"USER\",\"internet\"\r\n"};   // Put your mobile operator APN username here
 const char SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,\"PWD\",\"internet\"\r\n"};    // Put your mobile operator APN password here 
 // PDP context commands
-const char SAPBROPEN[] PROGMEM = {"AT+SAPBR=1,1\r\n"};  // open IP bearer
-const char SAPBRQUERY[] PROGMEM = {"AT+SAPBR=2,1\r\n"};  // query IP bearer
-const char SAPBRCLOSE[] PROGMEM = {"AT+SAPBR=0,1\r\n"};   // close bearer 
-const char SAPBRSUCC[] PROGMEM = {"+SAPBR: 1,1"}; // bearer was succesfull we are not checking IP assigned
-const char CHECKGPS[] PROGMEM = {"AT+CIPGSMLOC=1,1\r\n"};  // check AGPS position of nearest GSM CELL 
+const char SAPBROPEN[] PROGMEM = {"AT+SAPBR=1,1\r\n"};      // open IP bearer
+const char SAPBRQUERY[] PROGMEM = {"AT+SAPBR=2,1\r\n"};     // query IP bearer
+const char SAPBRCLOSE[] PROGMEM = {"AT+SAPBR=0,1\r\n"};     // close bearer 
+const char SAPBRSUCC[] PROGMEM = {"+SAPBR: 1,1"};           // bearer was succesfull we are not checking IP assigned
+const char CHECKGPS[] PROGMEM = {"AT+CIPGSMLOC=1,1\r\n"};   // check GPS position of nearest GSM CELL via Google API 
 
 
-// Initialize UART to 9600 baud with 8N1. 
-void init_uart(void);
-
-// Send and receive functions, that run without ISRs
-uint8_t receive_uart();
-void send_uart(uint8_t c);
-
-// Send a string
-void uart_puts(const char *s);
-// Send a PROGMEM string
-void uart_puts_P(const char *s);
-
-
-#ifndef TRUE
-#define TRUE 1
-#define FALSE 0 
-#endif
-
-//#define BAUD 19200
-#define BAUD 9600
-// 4.096MHz
-//  4800: 52.3333333
-//  9600: 25.6666667
-// 14400: 16.7777778
-// 19600: 12.06
-// 28800: 7.8889
-// 38400: 5.6667
-
-#define MYUBBR ((F_CPU / (BAUD * 16L)) - 1)
 #define BUFFER_SIZE 40
-
 // buffers for number of phone, responses from modem, longtitude & latitude data
 volatile static uint8_t response[BUFFER_SIZE] = "1234567890123456789012345678901234567890";
 volatile static uint8_t response_pos = 0;
@@ -129,11 +104,12 @@ volatile static uint8_t longtitude[10] = "1234567890";
 volatile static uint8_t longtitude_pos = 0;
 volatile static uint8_t buf[20];  // buffer to copy string from PROGMEM
 
-
-/*
- * init_uart
- */
+// *********************************************************************************************************
+// init_uart
+// *********************************************************************************************************
 void init_uart(void) {
+  // set U2X bit so we can get 9600baud with lowest error rate 0.2%
+  UCSRA = (1 << U2X);
   // set baud rate
   UBRRH = (uint8_t)(MYUBBR >> 8); 
   UBRRL = (uint8_t)(MYUBBR);
@@ -142,15 +118,13 @@ void init_uart(void) {
   // set frame format
   UCSRC = (0 << USBS) | (3 << UCSZ0); // asynchron 8n1
   // UCSRC = (1 << USBS) | (3 << UCSZ0);
-  
-}
+  }
 
 
-
-/*
- * send_uart
- * Sends a single char to UART without ISR
- */
+// *********************************************************************************************************
+// send_uart
+// Sends a single char to UART without ISR
+// *********************************************************************************************************
 void send_uart(uint8_t c) {
   // wait for empty data register
   while (!(UCSRA & (1<<UDRE)));
@@ -159,11 +133,10 @@ void send_uart(uint8_t c) {
 }
 
 
-
-/*
- * receive_uart
- * Receives a single char without ISR
- */
+// *********************************************************************************************************
+// receive_uart
+// Receives a single char without ISR
+// *********************************************************************************************************
 uint8_t receive_uart() {
   while ( !(UCSRA & (1<<RXC)) ) 
     ; 
@@ -171,8 +144,9 @@ uint8_t receive_uart() {
 }
 
 
-
+// *********************************************************************************************************
 // function to search RX buffer for response  SUB IN RX_BUFFER STR
+// *********************************************************************************************************
 uint8_t is_in_rx_buffer(char *str, char *sub) {
    uint8_t i, j=0, k;
     for(i=0; i<BUFFER_SIZE; i++)
@@ -189,12 +163,10 @@ uint8_t is_in_rx_buffer(char *str, char *sub) {
     return 0;
 }
 
- 
-
-/*
- * uart_puts
- * Sends a string.
- */
+// *********************************************************************************************************
+// uart_puts
+// Sends a string.
+// *********************************************************************************************************
 void uart_puts(const char *s) {
   while (*s) {
     send_uart(*s);
@@ -203,11 +175,10 @@ void uart_puts(const char *s) {
 }
 
 
-
-/*
- * uart_puts_P
- * Sends a PROGMEM string.
- */
+// *********************************************************************************************************
+// uart_puts_P
+// Sends a PROGMEM string.
+// *********************************************************************************************************
 void uart_puts_P(const char *s) {
   while (pgm_read_byte(s) != 0x00) {
     send_uart(pgm_read_byte(s++));
@@ -215,8 +186,9 @@ void uart_puts_P(const char *s) {
 }
 
 
-
+// *********************************************************************************************************
 // READLINE from serial port that starts with CRLF and ends with CRLF and put to 'response' buffer what read
+// *********************************************************************************************************
 uint8_t readline()
 {
   uint16_t char1, i , wholeline ;
@@ -247,12 +219,13 @@ uint8_t readline()
       i++;
       } while ( wholeline == 0);
 
-return (i-1);
+return 1;
 }
 
 
-
+// *********************************************************************************************************
 // READ CELL GPS from AT+CIPGSMLOC output and put output to 'lattitude' and 'longtitude' buffers
+// *********************************************************************************************************
 uint8_t readcellgps()
 {
   uint16_t char1;
@@ -295,12 +268,13 @@ uint8_t readcellgps()
            response[response_pos-1] = NULL; 
            response_pos=0;
            char1 = receive_uart();  // read last CR or LF and exit
-
-return (1);
+return 1;
 }
 
 
+// *********************************************************************************************************
 // read PHONE NUMBER from AT+CLIP output and copy it to buffer for SMS sending
+// *********************************************************************************************************
 uint8_t readphonenumber()
 {
   uint16_t char1;
@@ -323,7 +297,7 @@ uint8_t readphonenumber()
            do { 
            char1 = receive_uart(); 
            } while ( char1 != 0x0a && char1 != 0x0d  );
-return (1);
+return 1;
 }
 
 
@@ -341,19 +315,21 @@ while(i > 0)
 // Generated by delay loop calculator
 // at http://www.bretmulvey.com/avrdelay.html
 //
-// Delay 8 000 000 cycles
-// 1s at 8.0 MHz
+// Delay 1 000 000 cycles
+// 1s at 1 MHz
 
 asm volatile (
-    "    ldi  r18, 41"	"\n"
-    "    ldi  r19, 150"	"\n"
-    "    ldi  r20, 128"	"\n"
+    "    ldi  r18, 6"	"\n"
+    "    ldi  r19, 19"	"\n"
+    "    ldi  r20, 174"	"\n"
     "1:  dec  r20"	"\n"
     "    brne 1b"	"\n"
     "    dec  r19"	"\n"
     "    brne 1b"	"\n"
     "    dec  r18"	"\n"
     "    brne 1b"	"\n"
+    "    rjmp 1f"	"\n"
+    "1:"	"\n"
 );
 
 i--;  // decrease another second
@@ -367,7 +343,9 @@ i--;  // decrease another second
 // SIM800L initialization procedures
 //////////////////////////////////////////
 
+// *********************************************************************************************************
 // wait for first AT in case SIM800L is starting up
+// *********************************************************************************************************
 uint8_t checkat()
 {
   uint8_t initialized2;
@@ -388,13 +366,14 @@ uint8_t checkat()
                } while (initialized2 == 0);
 
         // send ECHO OFF
-		delay_sec(2);
-                 uart_puts_P(ECHO_OFF);
+              uart_puts_P(ECHO_OFF);
 
              return initialized2;
 }
 
+// *********************************************************************************************************
 // check if PIN is needed and enter PIN 1111 
+// *********************************************************************************************************
 uint8_t checkpin()
 {
 
@@ -420,16 +399,21 @@ uint8_t checkpin()
 }
 
 
+// *********************************************************************************************************
 // check if registered to the network
+// *********************************************************************************************************
 uint8_t checkregistration()
 {
-  uint8_t initialized2, attempt2;
+  uint8_t initialized2, nbrminutes;
      // readline and wait for STATUS NETWORK REGISTRATION from SIM800L
      // first 2 networks preferred from SIM list are OK
                   initialized2 = 0;
+                  nbrminutes = 0;
               do { 
-		delay_sec(5);
-                 uart_puts_P(SHOW_REGISTRATION);
+                 // give reasonable time to search for GSM network - 3 minutes is sufficient
+                   delay_sec(180);
+                 // check now if registered
+                   uart_puts_P(SHOW_REGISTRATION);
                 if (readline()>0)
                    {			   
                     memcpy_P(buf, ISREG1, sizeof(ISREG1));
@@ -441,10 +425,10 @@ uint8_t checkregistration()
                 // this is not to drain battery in underground garage 
                 else
                    {
-                //   uart_puts_P(FLIGHTON);    // enable airplane mode - turn off radio
-                //   delay_sec(300);
-                //   uart_puts_P(FLIGHTOFF);  // disable airplane mode - turn on radio and start to search for networks
-                //   delay_sec(30);           // give reasonable time to search for network
+                   delay_sec(1);
+                   uart_puts_P(FLIGHTON);    // enable airplane mode - turn off radio for 60 minutes
+                   for (nbrminutes=0; nbrminutes<60; nbrminutes++)   delay_sec(60);                      
+                   uart_puts_P(FLIGHTOFF);  // disable airplane mode - turn on radio and start to search for networks
                    };
                 // end of DO loop
                 } while (initialized2 == 0);
@@ -453,7 +437,9 @@ uint8_t checkregistration()
 };
  
 
+// *********************************************************************************************************
 // provision GPRS APNs and passwords - we are not checking if any error not to get deadlocks
+// *********************************************************************************************************
 uint8_t provisiongprs()
 {
      // connection to GPRS for AGPS basestation data - provision APN and username
@@ -537,10 +523,9 @@ int main(void) {
         delay_sec(3);
 
        // check pin status, registration status and provision APN settings
-        initialized = checkpin();
-        initialized = checkregistration();
-        initialized = provisiongprs();
-	delay_sec(2);
+        checkpin();
+        checkregistration();
+        provisiongprs();
  
        // read phone number of incoming voice call by CLIP, will be needed for SMS sending 
         uart_puts_P(CLIP); 
@@ -565,8 +550,8 @@ int main(void) {
                    initialized = 0;
 
                 // Disable LED blinking on  SIM800L
-                   uart_puts_P(DISABLELED);
-                   delay_sec(2);
+                //    uart_puts_P(DISABLELED);
+                //   delay_sec(2);
 
                // enter SLEEP MODE of SIM800L for power saving ( will be interrupted by incoming voice call or SMS ) 
                    uart_puts_P(SLEEPON); 
@@ -581,14 +566,15 @@ int main(void) {
                     memcpy_P(buf, ISRING, sizeof(ISRING));  
                     if (is_in_rx_buffer(response, buf) == 1) 
                      { initialized = 1; 
+                      // read phonenumber for text message from CLIP output
                         readphonenumber(); 
                       // disable SLEEPMODE , hangup a call and proceed with sending SMS                  
                        uart_puts_P(AT);
-                        delay_sec(1);
+                       delay_sec(1);
                        uart_puts_P(SLEEPOFF);
-                        delay_sec(1);
+                       delay_sec(1);
                        uart_puts_P(HANGUP);
-                        delay_sec(1);
+                       delay_sec(1);
                       } // end of IF
 
                      // if some other message than RING check if network is avaialble and SIM800L is operational  
@@ -600,23 +586,24 @@ int main(void) {
                        uart_puts_P(SLEEPOFF);
                        delay_sec(1);
                       // check status of all functions 
-                       initialized = checkpin();
-                       initialized = checkregistration();
-                       initialized = provisiongprs();
+                       checkpin();
+                       checkregistration();
+                       provisiongprs();
                       // read phone number of incoming voice call by CLIP, will be needed for SMS sending       
-                      uart_puts_P(CLIP);
-                      delay_sec(2);
+                       uart_puts_P(CLIP);
+                       delay_sec(2);
                     //and close the beare just in case it was open
-                      uart_puts_P(SAPBRCLOSE);
-                      delay_sec(2);
+                       uart_puts_P(SAPBRCLOSE);
+                       delay_sec(2);
                     // there was something different than RING so we need to go back to the beginning 
-                      initialized = 0;
+                       initialized = 0;
                       }; // end of ELSE
 
                     }; // END of READLINE IF
                  
                 } while ( initialized == 0);    // end od DO-WHILE, go to begging and enter SLEEPMODE again 
 
+           // clear the flag we gonna need it later
                initialized = 0;
 
            // Create connection to GPRS network - 3 attempts if needed, if not succesfull restart the modem 
@@ -624,7 +611,6 @@ int main(void) {
            do { 
 
             //and close the bearer first maybe there was an error or something
-              delay_sec(2);
               uart_puts_P(SAPBRCLOSE);
            
            // make GPRS network attach and open IP bearer
@@ -657,6 +643,7 @@ int main(void) {
                // parse GPS coordinates from the answer to SMS buffer
                readcellgps();
                 // send a SMS in plain text format
+               delay_sec(1); 
                uart_puts_P(SMS1);
                delay_sec(1); 
                // compose an SMS from fragments - interactive mode CTRL Z at the end
