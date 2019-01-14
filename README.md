@@ -22,13 +22,13 @@ The code is written in avr-gcc and was uploaded via USBASP. Both binary output v
 
 Source file options : 
 
-main.c - file for ATMEGA328P when MCU goes into POWERDOWN mode - the lowest power consumption (<3mA)
+main.c  ( compilation script : compileatmega ) - file for ATMEGA328P when MCU goes into POWERDOWN mode - the lowest power consumption (<3mA)
 
-mainb.c - file for ATMEGA328P when MCU periodically checks SIM800L 2G network status (once per hour and does radio switchoff for 2hours if necessary) - this version is most stable now but power consumption is slightly higher (~6mA)
+mainb.c ( compilation script : compileatmegab ) - file for ATMEGA328P when MCU periodically checks SIM800L 2G network status (once per hour and does radio switchoff for 2hours if necessary) - this version is most stable now but power consumption is slightly higher (~6mA)
 
-main3.c - file for ATTINY2313 when MCU goes int o POWERDOWN mode - the lowest power consumption (<2mA)
+main3.c ( compilation script : compileattiny )  - file for ATTINY2313 when MCU goes int o POWERDOWN mode - the lowest power consumption (<2mA)
 
-main3b.c - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per hour and does radio switchoff for 2hours if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
+main3b.c ( compilation script : compileattinyb )  - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per hour and does radio switchoff for 2hours if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
 
 
 For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory gets completely full.
