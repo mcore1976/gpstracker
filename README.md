@@ -15,7 +15,7 @@ The part list is (with the cost as in 2018):
 To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
 http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
 
-The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "avr-gcc" and "avrdude". For example in Ubuntu download these packages using command : "sudo apt-get install avr-gcc"  and "sudo apt-get install avrdude"  and you are ready to go. 
+The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "avr-gcc", "avr-libc" and "avrdude". For example in Ubuntu download these packages using command : "sudo apt-get install avr-gcc" , "sudo apt-get install avr-libc",  "sudo apt-get install avrdude"  and you are ready to go. 
 
 
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
