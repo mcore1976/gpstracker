@@ -472,8 +472,8 @@ uint8_t checkregistration()
      initialized2 = 0;
      nbrminutes = 0;
               do { 
-                 // give reasonable time for searching network like 2 minutes, maybe on the move...
-		 delay_sec(120);
+                 // give reasonable time for searching network like 1 minute, maybe on the move...
+		 delay_sec(60);
                  // check if registered to the network after that time
                  uart_puts_P(SHOW_REGISTRATION);
                 // readline and wait for STATUS NETWORK REGISTRATION from SIM808
@@ -495,8 +495,8 @@ uint8_t checkregistration()
                       delay_sec(1);
                      // enter SLEEP MODE of SIM800L for power saving when no coverage 
                       uart_puts_P(SLEEPON); 
-                     // now wait XX min before turning on radio again, here XX = 120 min
-                       for (nbrminutes = 0; nbrminutes<120; nbrminutes++) 
+                     // now wait XX min before turning on radio again, here XX = 30 min
+                       for (nbrminutes = 0; nbrminutes<30; nbrminutes++) 
                           { 
                           delay_sec(60); 
                           };  
@@ -688,8 +688,8 @@ int main(void) {
                                  {    // RING signal is HIGH
                                      nbrseconds++;               // increase number of seconds waited
                                      delay_sec(1);               // wait another second
-                                     // if 1 hour passed we need to check if there is need to turn off 2G for longer time
-                                     if (nbrseconds == 3600)
+                                     // if half of an hour passed we need to check if there is need to turn off 2G for longer time
+                                     if (nbrseconds == 1800)
                                           { // if 3600sec passed, we need to check 2G network coverage
                                             nbrseconds = 0;
                                             // wakeup SIM800L module
