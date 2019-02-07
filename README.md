@@ -17,6 +17,14 @@ http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP
 
 The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "avr-gcc", "avr-libc" and "avrdude". For example in Ubuntu download these packages using command : "sudo apt-get install avr-gcc" , "sudo apt-get install avr-libc",  "sudo apt-get install avrdude"  and you are ready to go. 
 
+In the code you have to put correct APN, USERNAME and PASSWORD your Mobile Network Operator before compiling - replace word "internet" with correct words for your MNO :
+
+constchar SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,"APN","internet"\r\n"}; // Put your mobile operator APN name here
+
+constchar SAPBR3[] PROGMEM = {"AT+SAPBR=3,1,"USER","internet"\r\n"}; // Put your mobile operator APN username here
+
+constchar SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,"PWD","internet"\r\n"}; // Put your mobile operator APN password here
+
 
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 
