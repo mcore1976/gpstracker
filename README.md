@@ -9,7 +9,7 @@ The part list is (with the cost as in 2018):
 - LM7805 (0.5USD) - optional if you intend to connect to car/bike battery directly
 - 6x 1N4007 (0.3 USD) - optional - for CAR/BIKE battery or USB Powerbank
 - 2x 1000uF / 16V capacitor ( 0.5 USD) - when powered from 3xAA battery pack only 1 capacitor is needed 
-- 100nF capacitor (0.2 USD) 
+- 100nF / 12V (or higher)  capacitor (0.2 USD) 
 - universal PCB, pins & connector (2 USD) 
 
 To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
