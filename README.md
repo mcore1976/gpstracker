@@ -5,7 +5,7 @@ The device when called by mobile phone polls cell-id info from nearest 2G cell, 
 BILL OF MATERIALS (with the cost as in 2018): 
 
 - SIM800L (3.5 USD on Aliexpress, but notice this module DOES NOT have GPS so we are polling info from base stations - if you want real GPS you need to use SIM808 breadboard - all details described in this project - https://github.com/mcore1976/sim808gpstracker ) 
-- ATMEL ATTINY2313 (2USD)  or ATMEGA 328P (arduino uno)  or ARDUINO MINI PRO board instead
+- ATMEL ATTINY2313 (2USD)  or ATMEGA 328P (arduino uno)  or ARDUINO MINI PRO 3.3V board instead
 - LM7805 (0.5USD) - optional if you intend to connect to car/bike battery directly
 - 6x 1N4007 (0.3 USD) - optional - for CAR/BIKE battery or USB Powerbank
 - 2x 1000uF / 16V capacitor ( 0.5 USD) - when powered from 3xAA battery pack only 1 capacitor is needed 
@@ -46,7 +46,7 @@ http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP
 If you are having problems with compilation and USBASR programmer you may also look at these tutorials  :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu 
 https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/  
 
-Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini" board instead.
+Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini 3.3V" board instead.
 There are two options for this board - 5V voltage and 3.3V voltage. Pay attention to it when selecting the board so it could match SIM800L board 3.3V TTL logic. 
 To use "Arduino Pro Mini" you will have to connect USBASP programmer from KANDA socket (look here : https://www.atnel.pl/download/blog/ISP_KANDA.jpg )  to appropriate pins of this board  : SCK (pin 13), MISO (pin 12), MOSI (pin 11), RESET (pin RST), pin VCC, pin GND - look at the board details here : https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-pro-mini.html 
 This GPS tracker solution is not based on ARDUINO FRAMEWORK (it does not use ARDUINO bootloader), it uses pure C code instead so USBASP programmer is still needed. 
