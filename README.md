@@ -12,21 +12,6 @@ The part list is (with the cost as in 2018):
 - 100nF / 12V (or higher)  capacitor (0.2 USD) 
 - universal PCB, pins & connector (2 USD) 
 
-To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
-http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
-
-The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "gcc-avr", "binutils-avr", "avr-libc", "avrdude" and optionally "gdb-avr"(debugger only if you really need it) . For example in Ubuntu download these packages using command : "sudo apt-get install gcc-avr binutils-avr avr-libc gdb-avr avrdude"  and you are ready to go. 
-You can also read the tutorial here :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu   or here   https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/
-
-In the code you have to put correct APN, USERNAME and PASSWORD of GPRS access from your Mobile Network Operator before compiling - replace word "internet" with correct words for your MNO :
-
-constchar SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,"APN","internet"\r\n"}; // Put your mobile operator APN name here
-
-constchar SAPBR3[] PROGMEM = {"AT+SAPBR=3,1,"USER","internet"\r\n"}; // Put your mobile operator APN username here
-
-constchar SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,"PWD","internet"\r\n"}; // Put your mobile operator APN password here
-
-
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 
 Source file options : 
@@ -39,6 +24,23 @@ main3.c ( compilation script : compileattiny )  - file for ATTINY2313 when MCU g
 
 main3b.c ( compilation script : compileattinyb )  - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
 
+To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
+http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
+
+The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "gcc-avr", "binutils-avr", "avr-libc", "avrdude" and optionally "gdb-avr"(debugger only if you really need it) . For example in Ubuntu download these packages using command : "sudo apt-get install gcc-avr binutils-avr avr-libc gdb-avr avrdude". 
+After this is done you can run from directory you downloaded the github files appropriate compilation script by commands 
+- "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
+- "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
+
+You can also read the tutorial here :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu   or here   https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/
+
+In the code you have to put correct APN, USERNAME and PASSWORD of GPRS access from your Mobile Network Operator before compiling - replace word "internet" with correct words for your MNO :
+
+constchar SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,"APN","internet"\r\n"}; // Put your mobile operator APN name here
+
+constchar SAPBR3[] PROGMEM = {"AT+SAPBR=3,1,"USER","internet"\r\n"}; // Put your mobile operator APN username here
+
+constchar SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,"PWD","internet"\r\n"}; // Put your mobile operator APN password here
 
 For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory gets completely full.
 Considering the SIM800L capability if more Flash memory is available (ATMEGA328P) the chip could even upload the GPS data to some EMAIL/FTP/HTTP server to get car tracking history. In source files above same functions are available for ATTINY2313 and ATMEGA328P
