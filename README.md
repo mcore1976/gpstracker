@@ -48,7 +48,10 @@ https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linu
 
 Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini 3.3V" board instead.
 There are two options for this board - 5V voltage and 3.3V voltage. Pay attention to it when selecting the board so it could match SIM800L board 3.3V TTL logic. 
-To use "Arduino Pro Mini" you will have to connect USBASP programmer from KANDA socket (look here : https://www.atnel.pl/download/blog/ISP_KANDA.jpg )  to appropriate pins of this board  : SCK (pin 13), MISO (pin 12), MOSI (pin 11), RESET (pin RST), pin VCC, pin GND - look at the board details here : https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-pro-mini.html 
+To use "Arduino Pro Mini" you will have to connect USBASP programmer from KANDA socket (look here : https://www.atnel.pl/download/blog/ISP_KANDA.jpg )  to appropriate pins of this board  : SCK (pin 13), MISO (pin 12), MOSI (pin 11), RESET (pin RST), pin VCC, pin GND - like here when changing/uploading bootloader https://www.arduino.cc/en/Hacking/MiniBootloader
+
+Description of this board is here : https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-pro-mini.html 
+
 This GPS tracker solution is not based on ARDUINO FRAMEWORK (it does not use ARDUINO bootloader), it uses pure C code instead so USBASP programmer is still needed. 
 
 
