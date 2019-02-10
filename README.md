@@ -2,19 +2,20 @@
 
 The device when called by mobile phone polls cell-id info from nearest 2G cell, uses GPRS to query Google servers for GPS location of that cell and sends back text message to your phone with current location link to Google map with timestamp. 
 
-The part list is (with the cost as in 2018): 
+BILL OF MATERIALS (with the cost as in 2018): 
 
 - SIM800L (3.5 USD on Aliexpress, but notice this module DOES NOT have GPS so we are polling info from base stations - if you want real GPS you need to use SIM808 breadboard - all details described in this project - https://github.com/mcore1976/sim808gpstracker ) 
-- ATMEL ATTINY2313 (2USD)  or ATMEGA 328P (arduino uno)
+- ATMEL ATTINY2313 (2USD)  or ATMEGA 328P (arduino uno)  or ARDUINO MINI PRO board instead
 - LM7805 (0.5USD) - optional if you intend to connect to car/bike battery directly
 - 6x 1N4007 (0.3 USD) - optional - for CAR/BIKE battery or USB Powerbank
 - 2x 1000uF / 16V capacitor ( 0.5 USD) - when powered from 3xAA battery pack only 1 capacitor is needed 
 - 100nF / 12V (or higher)  capacitor (0.2 USD) 
 - universal PCB, pins & connector (2 USD) 
 
-The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 
-Source file options : 
+SOURCE FILE OPTIONS  : 
+
+The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 
 main.c  ( compilation script : compileatmega ) - file for ATMEGA328P when MCU goes into POWERDOWN mode - the lowest power consumption (<3mA)
 
@@ -24,16 +25,6 @@ main3.c ( compilation script : compileattiny )  - file for ATTINY2313 when MCU g
 
 main3b.c ( compilation script : compileattinyb )  - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
 
-To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
-http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
-
-The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "gcc-avr", "binutils-avr", "avr-libc", "avrdude" and optionally "gdb-avr"(debugger only if you really need it) . For example in Ubuntu download these packages using command : "sudo apt-get install gcc-avr binutils-avr avr-libc gdb-avr avrdude". 
-After this is done you can run from directory you downloaded the github files appropriate compilation script by commands 
-- "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
-- "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
-
-You can also read the tutorial here :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu   or here   https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/
-
 In the code you have to put correct APN, USERNAME and PASSWORD of GPRS access from your Mobile Network Operator before compiling - replace word "internet" with correct words for your MNO :
 
 constchar SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,"APN","internet"\r\n"}; // Put your mobile operator APN name here
@@ -41,6 +32,27 @@ constchar SAPBR2[] PROGMEM = {"AT+SAPBR=3,1,"APN","internet"\r\n"}; // Put your 
 constchar SAPBR3[] PROGMEM = {"AT+SAPBR=3,1,"USER","internet"\r\n"}; // Put your mobile operator APN username here
 
 constchar SAPBR4[] PROGMEM = {"AT+SAPBR=3,1,"PWD","internet"\r\n"}; // Put your mobile operator APN password here
+
+The script attached in repository  ( "compileatmega" or "compileattiny" ) can be used to upload data to the chip if you have Linux machine with following packages : "gcc-avr", "binutils-avr", "avr-libc", "avrdude" and optionally "gdb-avr"(debugger only if you really need it) . For example in Ubuntu download these packages using command : "sudo apt-get install gcc-avr binutils-avr avr-libc gdb-avr avrdude". 
+After this is done you can run from directory you downloaded the github files appropriate compilation script by commands 
+- "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
+- "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
+
+PROGRAMMING THE ATTINY / ATMEGA / ARDUINO :
+
+To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
+http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
+
+If you are having problems with compilation and USBASR programmer you may also look at these tutorials  :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu 
+https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/  
+
+Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini" board instead.
+There are two options for this board - 5V voltage and 3.3V voltage. Pay attention to it when selecting the board so it could match SIM800L board 3.3V TTL logic. 
+To use "Arduino Pro Mini" you will have to connect USBASP programmer from KANDA socket (look here : https://www.atnel.pl/download/blog/ISP_KANDA.jpg )  to appropriate pins of this board  : SCK (pin 13), MISO (pin 12), MOSI (pin 11), RESET (pin RST), pin VCC, pin GND - look at the board details here : https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-pro-mini.html 
+This GPS tracker solution is not based on ARDUINO FRAMEWORK (it does not use ARDUINO bootloader), it uses pure C code instead so USBASP programmer is still needed. 
+
+
+OTHER INFORMATION : 
 
 For smallest chip ATTINY2313 the code takes about 2KB of Flash memory so the chip memory gets completely full.
 Considering the SIM800L capability if more Flash memory is available (ATMEGA328P) the chip could even upload the GPS data to some EMAIL/FTP/HTTP server to get car tracking history. In source files above same functions are available for ATTINY2313 and ATMEGA328P
