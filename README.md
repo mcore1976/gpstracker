@@ -43,7 +43,10 @@ PROGRAMMING THE ATTINY / ATMEGA / ARDUINO :
 To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
 http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php
 
-If you are having problems with compilation and USBASR programmer you may also look at these tutorials  :  http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu 
+If you are having problems with compilation and USBASR programmer you may also look at these tutorials  :  
+
+http://www.linuxandubuntu.com/home/setting-up-avr-gcc-toolchain-and-avrdude-to-program-an-avr-development-board-in-ubuntu 
+
 https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linuxmacosxwindows/  
 
 Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini 3.3V" board instead.
