@@ -52,7 +52,6 @@ https://blog.podkalicki.com/how-to-compile-and-burn-the-code-to-avr-chip-on-linu
 Some people do not like to use universal PCB and are having problems with soldering. You may use "Arduino Pro Mini 3.3V" board instead.
 There are two options for this board - 5V voltage and 3.3V voltage. Pay attention to it when selecting the board so it could match SIM800L board 3.3V TTL logic. 
 To use "Arduino Pro Mini" you will have to connect USBASP programmer from KANDA socket (look here : https://www.atnel.pl/download/blog/ISP_KANDA.jpg )  to appropriate pins of this board  : SCK (pin 13), MISO (pin 12), MOSI (pin 11), RESET (pin RST), pin VCC, pin GND - like here when changing/uploading bootloader https://www.arduino.cc/en/Hacking/MiniBootloader
-
 Description of this board is here : https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-pro-mini.html 
 
 This GPS tracker solution is not based on ARDUINO FRAMEWORK (it does not use ARDUINO bootloader), it uses pure C code instead so USBASP programmer is still needed. 
@@ -72,7 +71,7 @@ In the design there are 1N4007 diodes connected in serial+parallel to ensure tha
 
 The tracker can be powered 3 ways  ( and depending on powering method you can get rid of LM7805 or some 1N4007 diodes to simplify the design): 
 
-a) powering directly from car/bike battery - ensure that proper cables are used (must sustain 2Amps) and attach small heatsink to LM7805 TO220 case. It will not get hot all the time but ensure that current/heat protection within LM7805 would not activate. In such case the tracker will consume in standby something like 12mA due to LM7805 drop (conversion from 12V to 5V). You may try to put some replacement of LM7805 like switching power supply step-down converter.
+a) powering directly from car/bike battery - ensure that proper cables are used (must sustain 2Amps) and attach small heatsink to LM7805 TO220 case. It will not get hot all the time but ensure that current/heat protection within LM7805 would not activate. In such case the tracker will consume in standby something like 12mA due to LM7805 drop (conversion from 12V to 5V). You may try to put some replacement of LM7805 like switching power supply step-down converter -  DC-DC buck converter based on LM2596.
 
 b) powering from USB 5V Powerbanks - it is good to use the cheapest USB powerbanks that do not have current sensor. Remember that GPS tracker will draw VERY LOW current ( lower than 2mA). Some advanced powerbanks tend to switch off USB 5V when they find out that there is very little current consumed. If you have Powerbank with signalling LED then I suggest to get rid of this LED to reduce power drain on Powerbank. 
 
