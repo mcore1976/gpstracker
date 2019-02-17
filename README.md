@@ -1,4 +1,4 @@
- DIY ultra cheap GPS bike/car tracker based on ATMEL ATTINY 2313/4313 or ATMEGA 328P (arduino uno chip) and SIM800L module from China vendor SIMCOM. 
+ DIY ultra cheap GPS bike/car tracker based on ATMEL ATTINY 2313/4313 or ATMEGA 328P (arduino uno chip) and SIM800L module from China vendor SIMCOM. The description of SIM800L module is here : https://lastminuteengineers.com/sim800l-gsm-module-arduino-tutorial/
 
 The device when called by mobile phone polls cell-id info from nearest 2G cell, uses GPRS to query Google servers for GPS location of that cell and sends back text message to your phone with current location link to Google map with timestamp. 
 
