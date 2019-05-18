@@ -38,6 +38,9 @@ After this is done you can run from directory you downloaded the github files ap
 - "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
 - "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
 
+If you have Windows 10 machine please follow this tutorial to download and install full AVR-GCC environmet for Windows : http://fab.cba.mit.edu/classes/863.16/doc/projects/ftsmin/windows_avr.html
+After it is done please use "compileattinyX.bat" or "compileatmegaX.bat" for compilation inside directory where you have downloaded "mainXX.c" files. 
+
 PROGRAMMING THE ATTINY / ATMEGA / ARDUINO :
 
 To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
