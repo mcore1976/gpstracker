@@ -38,8 +38,9 @@ After this is done you can run from directory you downloaded the github files ap
 - "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
 - "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
 
-If you have Windows 10 machine please follow this tutorial to download and install full AVR-GCC environment for Windows : http://fab.cba.mit.edu/classes/863.16/doc/projects/ftsmin/windows_avr.html  with latest compiler from Microchip/Atmel
-After it is done please use "compileattinyX.bat" or "compileatmegaX.bat" for compilation inside directory where you have downloaded "mainXX.c" files. 
+If you have Windows 10 machine please follow this tutorial to download and install full AVR-GCC environment for Windows : http://fab.cba.mit.edu/classes/863.16/doc/projects/ftsmin/windows_avr.html  with latest compiler from Microchip/Atmel.
+
+After it is done please use "compileattinyX.bat" or "compileatmegaX.bat" for compilation inside directory where you have downloaded "mainXX.c" files. You have to be logged as Windows Administrator to use avrdude software.
 
 PROGRAMMING THE ATTINY / ATMEGA / ARDUINO :
 
