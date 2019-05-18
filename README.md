@@ -17,13 +17,13 @@ SOURCE FILE OPTIONS  :
 
 The code is written in avr-gcc and was uploaded via USBASP. Both binary output versions are provided : for ATTINY 2313(2313A/2313V) and ATMEGA 328P.
 
-main.c  ( compilation script : compileatmega ) - file for ATMEGA328P when MCU goes into POWERDOWN mode - the lowest power consumption (<3mA)
+main.c  ( compilation script : compileatmega / compileatmega.bat ) - file for ATMEGA328P when MCU goes into POWERDOWN mode - the lowest power consumption (<3mA)
 
-mainb.c ( compilation script : compileatmegab ) - file for ATMEGA328P when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary) - this version is most stable now but power consumption is slightly higher (~6mA)
+mainb.c ( compilation script : compileatmegab / compileatmegab.bat ) - file for ATMEGA328P when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary) - this version is most stable now but power consumption is slightly higher (~6mA)
 
-main3.c ( compilation script : compileattiny )  - file for ATTINY2313 when MCU goes int o POWERDOWN mode - the lowest power consumption (<2mA)
+main3.c ( compilation script : compileattiny / compileattiny.bat )  - file for ATTINY2313 when MCU goes int o POWERDOWN mode - the lowest power consumption (<2mA)
 
-main3b.c ( compilation script : compileattinyb )  - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
+main3b.c ( compilation script : compileattinyb / compileattinyb.bat )  - file for ATTINY2313 when MCU periodically checks SIM800L 2G network status (once per 30 min and does radio switchoff for 30 min if necessary)- this version is most stable now but power consumption is slightly higher (5mA)
 
 In the code you have to put correct APN, USERNAME and PASSWORD of GPRS access from your Mobile Network Operator before compiling - replace word "internet" below wit correct words for your MNO (check with your network provider hoe to configure GPRS access):
 
@@ -38,7 +38,7 @@ After this is done you can run from directory you downloaded the github files ap
 - "sudo chmod +rx compileatmega*" and "sudo ./compileatmega" ( "sudo ./compileatmegab" )
 - "sudo chmod +rx compileattiny*" and "sudo ./compileattiny" (  "sudo ./compileattinyb" )
 
-If you have Windows 10 machine please follow this tutorial to download and install full AVR-GCC environmet for Windows : http://fab.cba.mit.edu/classes/863.16/doc/projects/ftsmin/windows_avr.html
+If you have Windows 10 machine please follow this tutorial to download and install full AVR-GCC environment for Windows : http://fab.cba.mit.edu/classes/863.16/doc/projects/ftsmin/windows_avr.html  with latest compiler from Microchip/Atmel
 After it is done please use "compileattinyX.bat" or "compileatmegaX.bat" for compilation inside directory where you have downloaded "mainXX.c" files. 
 
 PROGRAMMING THE ATTINY / ATMEGA / ARDUINO :
