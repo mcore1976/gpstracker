@@ -48,6 +48,8 @@ After it is done please use "compileattinyX.bat" or "compileatmegaX.bat" for com
 
 PROGRAMMING THE ATTINY / ATMEGA / ARDUINO - connecting cables to the chip :
 
+Link to video how to program the chip : https://www.youtube.com/watch?v=7klgyNzZ2TI
+
 To upload program code to the chip using cheapest USBASP programmer (less than 2 USD on eBay/Aliexpress) look at this page :
 http://www.learningaboutelectronics.com/Articles/Program-AVR-chip-using-a-USBASP-with-10-pin-cable.php , because we are not using ARDUINO bootloader here (especially for chips like ATTINY)
 
